@@ -52,16 +52,44 @@ def total_variation_loss(x):
 def make_conv(filters, x, shape=(3, 3)):
     return Conv2D(filters, shape, activation='relu', padding='same')(x)
 
-class Evaluator:
+def eval_loss_and_grads(x):
+    print('hi')
+    if K.image_dim_ordering() == 'th':
+        x = x.reshape((1, 3, width, height))
+    else:
+        x = x.reshape((1, width, height, 3))
+    print('hi2')
+    outs = outputs([x])
+    print('hi3')
+    loss_value = outs[0]
+    print('hi4')
+    if len(outs[1:]) == 1:
+        grad_values = outs[1].flatten().astype('float64')
+    else:
+        grad_values = np.array(outs[1:]).flatten().astype('float64')
+    print('hi5')
+    return loss_value, grad_values
+
+class Evaluator(object):
+    def __init__(self):
+        self.loss_value = None
+        self.grads_values = None
+
     def loss(self, x):
-        x = x.reshape(1, width, height, 3)
-        outs = outputs([x])
-        self.loss_value = outs[0]
-        self.grad_values = np.array(outs[1:]).flatten()
+        assert self.loss_value is None
+        loss_value, grad_values = eval_loss_and_grads(x)
+        self.loss_value = loss_value
+        self.grad_values = grad_values
         return self.loss_value
 
     def grads(self, x):
-        return self.grad_values
+        assert self.loss_value is not None
+        grad_values = np.copy(self.grad_values)
+        self.loss_value = None
+        self.grad_values = None
+        return grad_values
+
+evaluator = Evaluator()
 
 parser = ArgumentParser(description='Neural style transfer with Keras for Nowhere Developers.')
 parser.add_argument('base_image', type=str, help='Image file to which to apply style.')
@@ -122,7 +150,8 @@ conv_layers = [model.layers[i] for i in conv_layers]
 
 base_features = conv_layers[args.content_layer].output[0, :, :, :]
 output_features = conv_layers[args.content_layer].output[2, :, :, :]
-loss = args.content_weight * content_loss(base_features, output_features)
+loss = K.variable(0.)
+loss += args.content_weight * content_loss(base_features, output_features)
 
 for i in range(len(conv_layers) - 1):
     style_features = conv_layers[i].output[1, :, :, :]
@@ -138,12 +167,12 @@ for i in range(len(conv_layers) - 1):
 
 loss += args.total_variation_weight * total_variation_loss(output_image)
 grads = K.gradients(loss, output_image)
+
 outputs = K.function([output_image], [loss] + grads)
 
 current_output = preprocess_image(args.base_image)
 
 print('Beginning training!')
-evaluator = Evaluator()
 prev_min_val = -1
 
 for i in range(args.num_iter):
@@ -153,8 +182,8 @@ for i in range(args.num_iter):
         evaluator.loss,
         current_output.flatten(),
         fprime=evaluator.grads,
-        maxfun=20
-    )
+        maxfun=20)
+    print('Current loss value:', min_val)
 
     if prev_min_val == -1:
         prev_min_val = min_val
