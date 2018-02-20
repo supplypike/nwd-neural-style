@@ -12,6 +12,8 @@ from keras.models import Model
 from keras.layers import Input, Conv2D, MaxPooling2D
 from keras.utils.data_utils import get_file
 
+from model import load_model
+
 def preprocess_image(path, new_shape=None, return_info=False):
     img = imread(path, mode='RGB').astype('float32')
 
@@ -49,9 +51,6 @@ def total_variation_loss(x):
     a = K.square(x[:, :width - 1, :height - 1, :] - x[:, 1:, :height - 1, :])
     b = K.square(x[:, :width - 1, :height - 1, :] - x[:, :width - 1, 1:, :])
     return K.sum(K.pow(a + b, 1.25))
-
-def make_conv(filters, x, shape=(3, 3)):
-    return Conv2D(filters, shape, activation='relu', padding='same')(x)
 
 def eval_loss_and_grads(x):
     if K.image_dim_ordering() == 'th':
@@ -112,39 +111,7 @@ style_image = K.variable(style_image)
 output_image = K.placeholder((1, width, height, 3))
 input_tensor = K.concatenate((base_image, style_image, output_image), axis=0)
 
-x = Input(tensor=input_tensor, batch_shape=(3, width, height, 3))
-y = x
-
-y = make_conv(64, y)
-y = make_conv(64, y)
-y = MaxPooling2D()(y)
-
-y = make_conv(128, y)
-y = make_conv(128, y)
-y = MaxPooling2D()(y)
-
-y = make_conv(256, y)
-y = make_conv(256, y)
-y = make_conv(256, y)
-y = MaxPooling2D()(y)
-
-y = make_conv(512, y)
-y = make_conv(512, y)
-y = make_conv(512, y)
-y = MaxPooling2D()(y)
-
-y = make_conv(512, y)
-y = make_conv(512, y)
-y = make_conv(512, y)
-y = MaxPooling2D()(y)
-
-model = Model(inputs=x, outputs=y)
-weights = get_file(
-    'vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5',
-    'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
-)
-model.load_weights(weights)
-
+model = load_model(width, height)
 print('Model loaded!')
 
 conv_layers = [1, 2, 4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17]
@@ -173,6 +140,9 @@ grads = K.gradients(loss, output_image)
 outputs = K.function([output_image], [loss] + grads)
 
 current_output = preprocess_image(args.base_image)
+
+print(type(loss), type(grads))
+quit()
 
 print('Beginning training!')
 prev_min_val = -1
