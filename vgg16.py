@@ -2,31 +2,31 @@ from keras.layers import Conv2D, Input, MaxPooling2D
 from keras.models import Model
 from keras.utils.data_utils import get_file
 
-def load_vgg16(width, height, channels=3, **kwargs):
-    x = Input(shape=(width, height, channels))
+def load_vgg16(width, height):
+    x = Input(shape=(width, height, 3))
     y = x
 
-    y = Conv2D(64, (3, 3), activation='relu', **kwargs)(y)
-    y = Conv2D(64, (3, 3), activation='relu', **kwargs)(y)
+    y = Conv2D(64, (3, 3), activation='relu')(y)
+    y = Conv2D(64, (3, 3), activation='relu')(y)
     y = MaxPooling2D()(y)
 
-    y = Conv2D(128, (3, 3), activation='relu', **kwargs)(y)
-    y = Conv2D(128, (3, 3), activation='relu', **kwargs)(y)
+    y = Conv2D(128, (3, 3), activation='relu')(y)
+    y = Conv2D(128, (3, 3), activation='relu')(y)
     y = MaxPooling2D()(y)
 
-    y = Conv2D(256, (3, 3), activation='relu', **kwargs)(y)
-    y = Conv2D(256, (3, 3), activation='relu', **kwargs)(y)
-    y = Conv2D(256, (3, 3), activation='relu', **kwargs)(y)
+    y = Conv2D(256, (3, 3), activation='relu')(y)
+    y = Conv2D(256, (3, 3), activation='relu')(y)
+    y = Conv2D(256, (3, 3), activation='relu')(y)
     y = MaxPooling2D()(y)
 
-    y = Conv2D(512, (3, 3), activation='relu', **kwargs)(y)
-    y = Conv2D(512, (3, 3), activation='relu', **kwargs)(y)
-    y = Conv2D(512, (3, 3), activation='relu', **kwargs)(y)
+    y = Conv2D(512, (3, 3), activation='relu')(y)
+    y = Conv2D(512, (3, 3), activation='relu')(y)
+    y = Conv2D(512, (3, 3), activation='relu')(y)
     y = MaxPooling2D()(y)
 
-    y = Conv2D(512, (3, 3), activation='relu', **kwargs)(y)
-    y = Conv2D(512, (3, 3), activation='relu', **kwargs)(y)
-    y = Conv2D(512, (3, 3), activation='relu', **kwargs)(y)
+    y = Conv2D(512, (3, 3), activation='relu')(y)
+    y = Conv2D(512, (3, 3), activation='relu')(y)
+    y = Conv2D(512, (3, 3), activation='relu')(y)
     y = MaxPooling2D()(y)
 
     model = Model(inputs=x, outputs=y)
