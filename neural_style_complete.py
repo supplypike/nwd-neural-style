@@ -54,21 +54,16 @@ def make_conv(filters, x, shape=(3, 3)):
     return Conv2D(filters, shape, activation='relu', padding='same')(x)
 
 def eval_loss_and_grads(x):
-    print('hi')
     if K.image_dim_ordering() == 'th':
         x = x.reshape((1, 3, width, height))
     else:
         x = x.reshape((1, width, height, 3))
-    print('hi2')
     outs = outputs([x])
-    print('hi3')
     loss_value = outs[0]
-    print('hi4')
     if len(outs[1:]) == 1:
         grad_values = outs[1].flatten().astype('float64')
     else:
         grad_values = np.array(outs[1:]).flatten().astype('float64')
-    print('hi5')
     return loss_value, grad_values
 
 class Evaluator(object):
@@ -189,7 +184,8 @@ for i in range(args.num_iter):
         evaluator.loss,
         current_output.flatten(),
         fprime=evaluator.grads,
-        maxfun=20)
+        maxfun=20,
+        iprint=100)
     print('Current loss value:', min_val)
 
     if prev_min_val == -1:
