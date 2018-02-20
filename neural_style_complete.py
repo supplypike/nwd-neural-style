@@ -5,6 +5,7 @@ from scipy.misc import imread, imresize, imsave
 from scipy.optimize import fmin_l_bfgs_b
 
 import numpy as np
+import tensorflow as tf
 
 from keras import backend as K
 from keras.models import Model
