@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from image import display_image, load_image
-from styler import Styler
+from style import apply_style
 import time
 
 p = ArgumentParser()
@@ -14,11 +14,4 @@ style_image = load_image(args.style_image, target_size=content_image.shape)
 width = content_image.shape[1]
 height = content_image.shape[0]
 
-for _ in range(3):
-    display_image(content_image)
-    time.sleep(1)
-    display_image(style_image)
-    time.sleep(1)
-
-#styler = Styler(width, height)
-#styled = styler.style(content_image, style_image)
+styled = apply_style(content_image, style_image)

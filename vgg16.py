@@ -1,8 +1,11 @@
-from keras.layers import Conv2D, Input, MaxPooling2D
+from keras.layers import Conv2D, GlobalMaxPooling2D, Input, MaxPooling2D
 from keras.models import Model
 from keras.utils.data_utils import get_file
 
-def load_vgg16(width, height):
+WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
+WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
+
+def load_vgg16(width, height, include_top=True):
     x = Input(shape=(width, height, 3))
     y = x
 
@@ -29,11 +32,19 @@ def load_vgg16(width, height):
     y = Conv2D(512, (3, 3), activation='relu')(y)
     y = MaxPooling2D()(y)
 
+    if include_top:
+        y = Flatten(name='flatten')(y)
+        y = Dense(4096, activation='relu')(y)
+        y = Dense(4096, activation='relu')(y)
+        y = Dense(1000, activation='softmax')(y)
+    else:
+        y = GlobalMaxPooling2D()(y)
+
     model = Model(inputs=x, outputs=y)
-    weights = get_file(
-        'vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5',
-        'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
-    )
-    model.load_weights(weights)
+    if include_top:
+        weights = get_file('vgg16_weights_tf_dim_ordering_tf_kernels.h5', WEIGHTS_PATH)
+    else:
+        weights = get_file('vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5', WEIGHTS_PATH_NO_TOP)
+    model.load_weights(weights)ch
 
     return model
