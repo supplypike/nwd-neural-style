@@ -92,6 +92,7 @@ class Evaluator(object):
 evaluator = Evaluator()
 
 parser = ArgumentParser(description='Neural style transfer with Keras for Nowhere Developers.')
+parser.add_argument('-c', '--cpu_cores', type=int, default=1)
 parser.add_argument('base_image', type=str, help='Image file to which to apply style.')
 parser.add_argument('style_image', type=str, help='Image file from which to transfer style.')
 parser.add_argument('out_prefix', type=str, nargs='?', default='', help='Prefix for result images.')
@@ -101,6 +102,11 @@ parser.add_argument('--num_iter', type=int, default=10)
 parser.add_argument('--style_weight', type=float, default=1)
 parser.add_argument('--total_variation_weight', type=float, default=1e-4)
 args = parser.parse_args()
+
+if args.cpu_cores > 0:
+    config = tf.ConfigProto(intra_op_parallelism_threads=args.cpu_cores, inter_op_parallelism_threads=args.cpu_cores)
+    session = tf.Session(config=config)
+    K.set_session(session)
 
 base_image, width, height, mean = preprocess_image(args.base_image, return_info=True)
 style_image = preprocess_image(args.style_image, new_shape=(width, height))
