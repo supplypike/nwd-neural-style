@@ -12,7 +12,7 @@ from keras.models import Model
 from keras.layers import Input, Conv2D, MaxPooling2D
 from keras.utils.data_utils import get_file
 
-from model import load_model
+from vgg16 import load_vgg16
 
 def preprocess_image(path, new_shape=None, return_info=False):
     img = imread(path, mode='RGB').astype('float32')
@@ -111,7 +111,7 @@ style_image = K.variable(style_image)
 output_image = K.placeholder((1, width, height, 3))
 input_tensor = K.concatenate((base_image, style_image, output_image), axis=0)
 
-model = load_model(width, height)
+model = load_vgg16(width, height)
 print('Model loaded!')
 
 conv_layers = [1, 2, 4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17]

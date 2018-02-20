@@ -2,7 +2,7 @@ from keras.layers import Conv2D, Input, MaxPooling2D
 from keras.models import Model
 from keras.utils.data_utils import get_file
 
-def load_model(width, height, channels=3, **kwargs):
+def load_vgg16(width, height, channels=3, **kwargs):
     x = Input(shape=(width, height, channels))
     y = x
 
