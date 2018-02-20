@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from keras.preprocessing import image
-from model import make_model
+from styler import Styler
 
 p = ArgumentParser()
 p.add_argument('content_image', type=str)
@@ -14,4 +14,5 @@ style_image = image.img_to_array(image.load_img(args.style_image,
 width = content_image.shape[1]
 height = content_image.shape[0]
 
-model = make_model(width, height)
+styler = Styler(width, height)
+styled = styler.style(content_image, style_image)
