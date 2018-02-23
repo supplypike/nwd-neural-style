@@ -15,3 +15,4 @@ width = content_image.shape[1]
 height = content_image.shape[0]
 
 styled = apply_style(content_image, style_image)
+print(styled)

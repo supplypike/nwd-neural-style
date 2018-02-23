@@ -45,6 +45,6 @@ def load_vgg16(width, height, include_top=True):
         weights = get_file('vgg16_weights_tf_dim_ordering_tf_kernels.h5', WEIGHTS_PATH)
     else:
         weights = get_file('vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5', WEIGHTS_PATH_NO_TOP)
-    model.load_weights(weights)ch
+    model.load_weights(weights)
 
     return model
