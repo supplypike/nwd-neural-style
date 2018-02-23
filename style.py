@@ -12,17 +12,22 @@ def _neural_style_loss(output):
     style_features = output[0][1]
     output_features = output[0][2]
 
-    content_loss = K.sum(K.square(output_features - content_features))
+    #content_loss = K.sum(K.square(output_features - content_features))
+    content_loss = K.sum(K.square(output_features - style_features))
     style_loss = 0.
 
     return content_loss + style_loss
 
-def _fit(model, input_batch):
+def _fit(model, ins):
     optimizer = keras.optimizers.sgd()
     loss = _neural_style_loss(model.outputs)
 
     updates = optimizer.get_updates(params=model.trainable_weights, loss=loss)
-    train_fn = K.function(model.inputs, [loss])
+    f = K.function(model.inputs, [loss], updates=updates)
+
+    print('about to call...')
+    outs = f(ins)
+    print('called')
 
 def apply_style(content_image, style_image, content_weight=0.025, feature_layer=16):
     height = content_image.shape[0]
@@ -46,11 +51,11 @@ def apply_style(content_image, style_image, content_weight=0.025, feature_layer=
     model = Model(inputs=x1, outputs=y)
 
     # train to fit
-    input_batch = np.concatenate((
+    ins = np.concatenate((
         np.expand_dims(content_image, axis=0),
         np.expand_dims(style_image, axis=0)),
         axis=0)
-    _fit(model, input_batch)
+    _fit(model, [ins])
 
     # return result
-    return K.get_value(x2)
+    return K.get_value(x2).reshape(x2.shape[1:])
