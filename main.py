@@ -6,6 +6,7 @@ import time
 p = ArgumentParser()
 p.add_argument('content_image', type=str)
 p.add_argument('style_image', type=str)
+p.add_argument('-d', '--display', action='store_true')
 args = p.parse_args()
 
 content_image = load_image(args.content_image)
@@ -15,5 +16,6 @@ width = content_image.shape[1]
 height = content_image.shape[0]
 
 styled = apply_style(content_image, style_image)
-display_image(styled)
-time.sleep(10)
+if args.display:
+    display_image(styled)
+    time.sleep(10)

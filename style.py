@@ -25,9 +25,7 @@ def _fit(model, ins):
     updates = optimizer.get_updates(params=model.trainable_weights, loss=loss)
     f = K.function(model.inputs, [loss], updates=updates)
 
-    print('about to call...')
     outs = f(ins)
-    print('called')
 
 def apply_style(content_image, style_image, content_weight=0.025, feature_layer=16):
     height = content_image.shape[0]
