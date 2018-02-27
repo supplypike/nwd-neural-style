@@ -6,7 +6,7 @@ WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/downlo
 WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
 def load_vgg16(width, height, include_top=True):
-    x = Input(shape=(width, height, 3))
+    x = Input(shape=(height, width, 3))
     y = x
 
     y = Conv2D(64, (3, 3), activation='relu')(y)

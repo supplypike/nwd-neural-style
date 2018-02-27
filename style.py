@@ -32,17 +32,12 @@ def _neural_style_loss(model, content_weight=0.025, tv_weight=1e-4):
     style_loss = 0.
     conv_layers = [x for x in model.layers[3].layers if x.__class__.__name__ == 'Conv2D']
     for i in range(len(conv_layers) - 1):
-        # l1 = conv_layers[i]
-        # l2 = conv_layers[i+1]
-        # print(l1)
-        # print(l1.output)
-        # print(l1.output.shape)
-        # print(l1.output[1].shape)
-        # sl1 = _style_loss(l1.output[1], l2.output[2])
-        # sl2 = _style_loss(l2.output[1], l2.output[2])
-        # sl = sl1 - sl2
-        # style_loss += sl / (2 ** (len(conv_layers) - i - 1))
-        style_loss += K.sum(conv_layers[i].output)
+        l1 = conv_layers[i]
+        l2 = conv_layers[i+1]
+        sl1 = _style_loss(l1.output[1], l2.output[2])
+        sl2 = _style_loss(l2.output[1], l2.output[2])
+        sl = sl1 - sl2
+        style_loss += sl / (2 ** (len(conv_layers) - i - 1))
 
     content_features = output[0]
     output_features = output[2]
@@ -76,7 +71,7 @@ def apply_style(content_image, style_image, display=False, content_weight=0.025,
     for layer in vgg16.layers:
         layer.trainable = False
 
-    # create a new model on top of vgg16 with built-in output image, compiled with custom loss
+    # create a new model on top of vgg16 with built-in output image
     x1 = Input(batch_shape=(2, height, width, 3))
     x2 = Image(content_image)(x1)
     y = Concatenate(axis=0)([x1, x2])
