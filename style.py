@@ -2,7 +2,7 @@ from __future__ import print_function
 from keras import backend as K
 from keras.layers import Concatenate, Input
 from keras.models import Model
-from image import Image
+from image import Image, display_image, save_image
 from vgg16 import load_vgg16
 import keras
 import numpy as np
@@ -59,7 +59,7 @@ def apply_style(content_image, style_image, display=False, content_weight=0.025,
     for i in range(100):
         print('{} of {}...'.format(i+1, 100))
         _fit(model, [ins])
-        if args.display:
+        if display:
             display_image(styled)
         else:
             val = K.get_value(x2).reshape(x2.shape[1:])
