@@ -13,6 +13,10 @@ def load_image(path, **kwargs):
     img = image.img_to_array(img)
     return img
 
+def save_image(array, path):
+    img = image.array_to_img(array)
+    img.save(path)
+
 # a layer that ignores its input and returns an image that is trained as a weight
 class Image(Layer):
     def __init__(self, init_value, **kwargs):
