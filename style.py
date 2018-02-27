@@ -63,7 +63,7 @@ def apply_style(content_image, style_image, display=False, content_weight=0.025,
             display_image(styled)
         else:
             val = K.get_value(x2).reshape(x2.shape[1:])
-            save_image(styled, 'img{:02}.png'.format(i+1))
+            save_image(val, 'img{:02}.png'.format(i+1))
 
     # return result
     return K.get_value(x2).reshape(x2.shape[1:])
