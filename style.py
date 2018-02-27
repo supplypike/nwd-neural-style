@@ -25,9 +25,10 @@ def _fit(model, ins):
     updates = optimizer.get_updates(params=model.trainable_weights, loss=loss)
     f = K.function(model.inputs, [loss], updates=updates)
 
+    # todo: don't stop after just one try
     outs = f(ins)
 
-def apply_style(content_image, style_image, content_weight=0.025, feature_layer=16):
+def apply_style(content_image, style_image, display=False, content_weight=0.025, feature_layer=16):
     height = content_image.shape[0]
     width = content_image.shape[1]
 
@@ -48,12 +49,21 @@ def apply_style(content_image, style_image, content_weight=0.025, feature_layer=
     y = vgg16(y)
     model = Model(inputs=x1, outputs=y)
 
-    # train to fit
+    # prepare training inputs
     ins = np.concatenate((
         np.expand_dims(content_image, axis=0),
         np.expand_dims(style_image, axis=0)),
         axis=0)
-    _fit(model, [ins])
+
+    # train to fit
+    for i in range(100):
+        print('{} of {}...'.format(i+1, 100))
+        _fit(model, [ins])
+        if args.display:
+            display_image(styled)
+        else:
+            val = K.get_value(x2).reshape(x2.shape[1:])
+            save_image(styled, 'img{:02}.png'.format(i+1))
 
     # return result
     return K.get_value(x2).reshape(x2.shape[1:])

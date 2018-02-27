@@ -25,9 +25,4 @@ style_image = load_image(args.style_image, target_size=content_image.shape)
 width = content_image.shape[1]
 height = content_image.shape[0]
 
-styled = apply_style(content_image, style_image)
-if args.display:
-    display_image(styled)
-    time.sleep(10)
-else:
-    save_image(styled, 'img01.png')
+styled = apply_style(content_image, style_image, display=args.display)
