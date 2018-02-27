@@ -59,10 +59,10 @@ def apply_style(content_image, style_image, display=False, content_weight=0.025,
     for i in range(100):
         print('{} of {}...'.format(i+1, 100))
         _fit(model, [ins])
+        val = K.get_value(x2).reshape(x2.shape[1:])
         if display:
-            display_image(styled)
+            display_image(val)
         else:
-            val = K.get_value(x2).reshape(x2.shape[1:])
             save_image(val, 'img{:02}.png'.format(i+1))
 
     # return result
