@@ -19,7 +19,7 @@ if args.cpu_cores > 0:
     session = tf.Session(config=config)
     K.set_session(session)
 
-content_image = load_image(args.content_image, target_size=(240, 320))
+content_image = load_image(args.content_image, target_size=(320, 480))
 style_image = load_image(args.style_image, target_size=content_image.shape)
 
 width = content_image.shape[1]

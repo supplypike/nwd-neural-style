@@ -7,20 +7,41 @@ from vgg16 import load_vgg16
 import keras
 import numpy as np
 
-def _neural_style_loss(output):
+def _gram_matrix(x):
+    features = K.batch_flatten(K.permute_dimensions(x, (2, 0, 1)))
+    return K.dot(features - 1, K.transpose(features - 1))
+
+def _content_loss(content_features, output_features):
+    return K.sum(K.square(output_features - content_features))
+
+def _style_loss(style_features, output_features):
+    S = _gram_matrix(style_features)
+    O = _gram_matrix(output_features)
+    size = int(style_features.shape[0] * style_features.shape[1])
+    return K.sum(K.square(S - O)) / (36. * (size ** 2))
+
+def _total_variation_loss(output_image):
+    a = K.square(output_image[:, :-1, :-1, :] - output_image[:, 1:, :-1, :])
+    b = K.square(output_image[:, :-1, :-1, :] - output_image[:, :-1, 1:, :])
+    return K.sum(K.pow(a + b, 1.25))
+
+def _neural_style_loss(model, content_weight=0.025, tv_weight=1e-4):
+    output = model.outputs
+    output_image = model.layers[1].output
+
     content_features = output[0][0]
     style_features = output[0][1]
     output_features = output[0][2]
 
-    #content_loss = K.sum(K.square(output_features - content_features))
-    content_loss = K.sum(K.square(output_features - style_features))
-    style_loss = 0.
+    content_loss = content_weight * _content_loss(content_features, output_features)
+    style_loss = _style_loss(style_features, output_features)
+    tv_loss = tv_weight * _total_variation_loss(output_image)
 
-    return content_loss + style_loss
+    return content_loss + style_loss + tv_loss
 
-def _fit(model, ins):
-    optimizer = keras.optimizers.sgd()
-    loss = _neural_style_loss(model.outputs)
+def _fit(model, ins, **kwargs):
+    optimizer = keras.optimizers.sgd(lr=0.001)
+    loss = _neural_style_loss(model, **kwargs)
 
     updates = optimizer.get_updates(params=model.trainable_weights, loss=loss)
     f = K.function(model.inputs, [loss], updates=updates)
@@ -28,7 +49,7 @@ def _fit(model, ins):
     # todo: don't stop after just one try
     outs = f(ins)
 
-def apply_style(content_image, style_image, display=False, content_weight=0.025, feature_layer=16):
+def apply_style(content_image, style_image, display=False, content_weight=0.025, tv_weight=1e-4, feature_layer=16):
     height = content_image.shape[0]
     width = content_image.shape[1]
 
@@ -58,7 +79,7 @@ def apply_style(content_image, style_image, display=False, content_weight=0.025,
     # train to fit
     for i in range(100):
         print('{} of {}...'.format(i+1, 100))
-        _fit(model, [ins])
+        _fit(model, [ins], content_weight=content_weight, tv_weight=tv_weight)
         val = K.get_value(x2).reshape(x2.shape[1:])
         if display:
             display_image(val)
