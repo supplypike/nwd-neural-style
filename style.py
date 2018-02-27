@@ -26,15 +26,28 @@ def _total_variation_loss(output_image):
     return K.sum(K.pow(a + b, 1.25))
 
 def _neural_style_loss(model, content_weight=0.025, tv_weight=1e-4):
-    output = model.outputs
+    output = model.outputs[0]
     output_image = model.layers[1].output
 
-    content_features = output[0][0]
-    style_features = output[0][1]
-    output_features = output[0][2]
+    style_loss = 0.
+    conv_layers = [x for x in model.layers[3].layers if x.__class__.__name__ == 'Conv2D']
+    for i in range(len(conv_layers) - 1):
+        # l1 = conv_layers[i]
+        # l2 = conv_layers[i+1]
+        # print(l1)
+        # print(l1.output)
+        # print(l1.output.shape)
+        # print(l1.output[1].shape)
+        # sl1 = _style_loss(l1.output[1], l2.output[2])
+        # sl2 = _style_loss(l2.output[1], l2.output[2])
+        # sl = sl1 - sl2
+        # style_loss += sl / (2 ** (len(conv_layers) - i - 1))
+        style_loss += K.sum(conv_layers[i].output)
+
+    content_features = output[0]
+    output_features = output[2]
 
     content_loss = content_weight * _content_loss(content_features, output_features)
-    style_loss = _style_loss(style_features, output_features)
     tv_loss = tv_weight * _total_variation_loss(output_image)
 
     return content_loss + style_loss + tv_loss
@@ -69,6 +82,9 @@ def apply_style(content_image, style_image, display=False, content_weight=0.025,
     y = Concatenate(axis=0)([x1, x2])
     y = vgg16(y)
     model = Model(inputs=x1, outputs=y)
+
+    print(model.summary())
+    print(vgg16.summary())
 
     # prepare training inputs
     ins = np.concatenate((
