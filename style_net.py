@@ -6,6 +6,9 @@ from vgg16 import load_vgg16_weights
 import keras
 import numpy as np
 
+from image import display_image
+import time
+
 class StyleNet():
     def __init__(self, input_shape=(224, 224, 3)):
         # Different input at the beginning
@@ -60,6 +63,8 @@ class StyleNet():
             axis=0)
 
         outs = f([ins])
+        display_image(self.output_image)
+        time.sleep(10)
 
     def _neural_style_loss(self):
         output = self.model.output
