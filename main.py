@@ -1,7 +1,10 @@
+from __future__ import print_function
 from argparse import ArgumentParser
 from image import display_image, load_image, save_image
 from keras import backend as K
 from style import apply_style
+from vgg16 import load_vgg16
+import numpy as np
 import tensorflow as tf
 import time
 
@@ -19,10 +22,10 @@ if args.cpu_cores > 0:
     session = tf.Session(config=config)
     K.set_session(session)
 
-content_image = load_image(args.content_image, target_size=(320, 480))
+content_image = load_image(args.content_image, target_size=(224, 224))
 style_image = load_image(args.style_image, target_size=content_image.shape)
 
 width = content_image.shape[1]
 height = content_image.shape[0]
 
-styled = apply_style(content_image, style_image, display=args.display)
+# styled = apply_style(content_image, style_image, display=args.display)
