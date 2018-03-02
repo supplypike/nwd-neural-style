@@ -2,7 +2,7 @@ from __future__ import print_function
 from argparse import ArgumentParser
 from image import display_image, load_image, save_image
 from keras import backend as K
-from style_net import load_style_net
+from style_net import StyleNet
 from vgg16 import load_vgg16
 import numpy as np
 import tensorflow as tf
@@ -25,6 +25,5 @@ if args.cpu_cores > 0:
 content_image = load_image(args.content_image, target_size=(240, 320))
 style_image = load_image(args.style_image, target_size=content_image.shape)
 
-style_net = load_style_net(input_shape=content_image.shape)
-
-# styled = apply_style(content_image, style_image, display=args.display)
+style_net = StyleNet(input_shape=content_image.shape)
+style_net.apply_style(content_image, style_image)
