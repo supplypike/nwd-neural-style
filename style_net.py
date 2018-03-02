@@ -48,11 +48,11 @@ class StyleNet():
         self.model = Model(inputs=x, outputs=y)
         load_vgg16_weights(self.model, include_top=False, by_name=True)
 
-    def apply_style(self, content_image, style_image):
+    def apply_style(self, content_image, style_image, **kwargs):
         K.set_value(self.output_image, np.expand_dims(content_image, axis=0))
 
-        optimizer = keras.optimizers.sgd(lr=0.001)
-        loss = self._neural_style_loss()
+        optimizer = keras.optimizers.sgd(lr=1e-4, momentum=0.9, nesterov=True)
+        loss = self._neural_style_loss(content_image, **kwargs)
 
         updates = optimizer.get_updates(params=self.model.trainable_weights, loss=loss)
         f = K.function(self.model.inputs, [loss], updates=updates)
@@ -62,17 +62,35 @@ class StyleNet():
             np.expand_dims(style_image, axis=0)),
             axis=0)
 
-        outs = f([ins])
-        display_image(self.output_image)
+        for i in range(100):
+            print('{} / {}'.format(i+1, 100))
+            f([ins])
+            display_image(K.get_value(self.output_image[0]))
         time.sleep(10)
 
-    def _neural_style_loss(self):
-        output = self.model.output
+    def _neural_style_loss(self, content_image, content_weight=0.025, tv_weight=1e-4):
+        output = self.model.get_layer('block5_conv2').output
         content_features = output[0]
         style_features = output[1]
         output_features = output[2]
 
-        content_loss = K.sum(K.square(content_features - output_features))
-        style_loss = K.sum(K.square(style_features - output_features))
+        content_loss = content_weight * K.sum(K.square(content_image - self.output_image))
+        tv_loss = tv_weight * self._total_variation_loss()
+        style_loss = self._style_loss(style_features, output_features)
 
-        return content_loss + style_loss
+        return content_loss + tv_loss + style_loss
+
+    def _gram_matrix(self, x):
+        features = K.batch_flatten(K.permute_dimensions(x, (2, 0, 1)))
+        return K.dot(features - 1, K.transpose(features - 1))
+
+    def _style_loss(self, style_features, output_features):
+        S = self._gram_matrix(style_features)
+        O = self._gram_matrix(output_features)
+        size = int(style_features.shape[0] * style_features.shape[1])
+        return K.sum(K.square(S - O)) / (36. * (size ** 2))
+
+    def _total_variation_loss(self):
+        a = K.square(self.output_image[:, :-1, :-1, :] - self.output_image[:, 1:, :-1, :])
+        b = K.square(self.output_image[:, :-1, :-1, :] - self.output_image[:, :-1, 1:, :])
+        return K.sum(K.pow(a + b, 1.25))
