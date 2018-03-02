@@ -1,40 +1,30 @@
-from keras import backend as K
-from keras.engine.topology import Layer
 from keras.preprocessing import image
 import pylab
-import time
+import numpy as np
+
+AVG_PIXEL = [103.939, 116.779, 123.68]
 
 def display_image(img):
+    img = postprocess_image(img)
     pylab.imshow(image.array_to_img(img))
     pylab.pause(0.01)
 
 def load_image(path, **kwargs):
     img = image.load_img(path, **kwargs)
     img = image.img_to_array(img)
+    img = img[:,:,::-1]
+    img = img - AVG_PIXEL
     return img
 
 def save_image(array, path):
-    img = image.array_to_img(array)
+    img = postprocess_image(array)
+    img = image.array_to_img(img)
     img.save(path)
 
-# a layer that ignores its input and returns an image that is trained as a weight
-class Image(Layer):
-    def __init__(self, init_value, **kwargs):
-        super(Image, self).__init__(**kwargs)
-        self.init_value = init_value.reshape((1,) + init_value.shape)
-
-    def build(self, input_shape):
-        self.value = self.add_weight(
-            name='value',
-            shape=self.init_value.shape,
-            initializer='zeros',
-            trainable=True)
-        K.set_value(self.value, self.init_value)
-
-    def call(self, x):
-        return self.value
-
-    def compute_output_shape(self, input_shape):
-        return self.init_value.shape
+def postprocess_image(array):
+    y = array.copy()
+    y = y + AVG_PIXEL
+    y = y[:,:,::-1]
+    return y
 
 pylab.ion()

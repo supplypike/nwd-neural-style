@@ -5,8 +5,8 @@ from keras import backend as K
 from style_net import StyleNet
 from vgg16 import load_vgg16
 import numpy as np
+import pylab
 import tensorflow as tf
-import time
 
 p = ArgumentParser()
 p.add_argument('content_image', type=str)
@@ -22,8 +22,10 @@ if args.cpu_cores > 0:
     session = tf.Session(config=config)
     K.set_session(session)
 
-content_image = load_image(args.content_image, target_size=(240, 320))
+content_image = load_image(args.content_image, target_size=(400, 714))
 style_image = load_image(args.style_image, target_size=content_image.shape)
 
 style_net = StyleNet(input_shape=content_image.shape)
-style_net.apply_style(content_image, style_image)
+styled_image = style_net.apply_style(content_image, style_image, display=True)
+display_image(styled_image)
+pylab.show()
