@@ -72,7 +72,7 @@ class StyleNet():
 
         return K.get_value(self.output_image[0])
 
-    def _neural_style_loss(self, content_image, content_weight=0.025, tv_weight=8.5e-5, style_weight=1.):
+    def _neural_style_loss(self, content_image, content_weight=0.025, tv_weight=8.5e-5, style_weight=0.1):
         output = self.model.get_layer('block5_conv2').output
         content_features = output[0]
         output_features = output[2]
