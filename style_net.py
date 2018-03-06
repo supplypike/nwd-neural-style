@@ -10,13 +10,19 @@ import numpy as np
 import sys
 
 class StyleNet():
-    def __init__(self, input_shape=(224, 224, 3)):
+    def __init__(self,
+                 input_shape=(224, 224, 3),
+                 content_layer='block5_conv2',
+                 style_layers=['block1_conv1', 'block2_conv1', 'block3_conv1', 'block4_conv1', 'block5_conv1']):
+        self.content_layer = content_layer
+        self.style_layers = style_layers
+
         # Different input at the beginning
 
         x = Input(batch_shape=(2,)+input_shape)
-        self.output_image = LatentValue(shape=(1,)+input_shape, name='output_image')(x)
+        self.generated_image = LatentValue(shape=(1,)+input_shape, name='generated_image')(x)
 
-        y = Concatenate(axis=0)([x, self.output_image])
+        y = Concatenate(axis=0)([x, self.generated_image])
 
         # VGG16 at the end
 
@@ -49,49 +55,55 @@ class StyleNet():
         load_vgg16_weights(self.model, include_top=False, by_name=True)
 
     def apply_style(self, content_image, style_image, display=False, **kwargs):
-        K.set_value(self.output_image, np.expand_dims(content_image, axis=0))
+        K.set_value(self.generated_image, np.expand_dims(content_image, axis=0))
 
-        optimizer = keras.optimizers.sgd(lr=1e-3, momentum=0.9, nesterov=True)
-        loss = self._neural_style_loss(content_image, **kwargs)
+        optimizer = keras.optimizers.adam(lr=5.)
+        c_loss, t_loss, s_loss = self._neural_style_loss(content_image, return_pieces=True, **kwargs)
+        loss = c_loss + t_loss + s_loss
 
         updates = optimizer.get_updates(params=self.model.trainable_weights, loss=loss)
-        f = K.function(self.model.inputs, [loss], updates=updates)
+        f = K.function(self.model.inputs, [c_loss, t_loss, s_loss], updates=updates)
 
         ins = np.concatenate((
             np.expand_dims(content_image, axis=0),
             np.expand_dims(style_image, axis=0)),
             axis=0)
 
-        for i in range(100):
-            print('\r{} / {}'.format(i+1, 100), end='')
+        for i in range(2000):
+            print('{} / {}'.format(i+1, 2000), end='')
             sys.stdout.flush()
-            f([ins])
+
+            losses = f([ins])
+
+            print(', s_loss={}, c_loss={}, t_loss={}'.format(losses[2], losses[0], losses[1]))
+            sys.stdout.flush()
+
             if display:
-                display_image(K.get_value(self.output_image[0]))
+                display_image(K.get_value(self.generated_image[0]))
         print()
 
-        return K.get_value(self.output_image[0])
+        return K.get_value(self.generated_image[0])
 
-    def _neural_style_loss(self, content_image, content_weight=0.025, tv_weight=8.5e-5, style_weight=0.1):
-        output = self.model.get_layer('block5_conv2').output
+    # todo: precompute gram matrix for style_image for all layers since that never changes
+
+    def _neural_style_loss(self, content_image, content_weight=1e-4, tv_weight=1e-6, style_weight=1., return_pieces=False):
+        output = self.model.get_layer(self.content_layer).output
         content_features = output[0]
         output_features = output[2]
 
-        content_loss = K.sum(K.square(content_features - output_features))
+        content_loss = K.mean(K.square(content_features - output_features))
         tv_loss = self._total_variation_loss()
 
         style_loss = 0.
-        conv_outputs = [x.output for x in self.model.layers if x.__class__.__name__ == 'Conv2D']
-        for i in range(len(conv_outputs) - 1):
-            style_features_1 = conv_outputs[i][1]
-            output_features_1 = conv_outputs[i][2]
-            loss_1 = self._style_loss(style_features_1, output_features_1)
+        conv_outputs = [x.output for x in self.model.layers if x.name in self.style_layers]
+        for output in conv_outputs:
+            style_features = output[1]
+            output_features = output[2]
+            style_loss = style_loss + self._style_loss(style_features, output_features)
+        style_loss = style_loss / float(len(conv_outputs))
 
-            style_features_2 = conv_outputs[i+1][1]
-            output_features_2 = conv_outputs[i+1][2]
-            loss_2 = self._style_loss(style_features_2, output_features_2)
-
-            style_loss = style_loss + (loss_1 - loss_2) / (2 ** (len(conv_outputs) - i - 2))
+        if return_pieces:
+            return content_weight*content_loss, tv_weight*tv_loss, style_weight*style_loss
 
         return content_weight*content_loss + tv_weight*tv_loss + style_weight*style_loss
 
@@ -102,10 +114,10 @@ class StyleNet():
     def _style_loss(self, style_features, output_features):
         S = self._gram_matrix(style_features)
         O = self._gram_matrix(output_features)
-        size = int(self.output_image.shape[1] * self.output_image.shape[2])
-        return K.sum(K.square(S - O)) / (36. * (size ** 2))
+        size = int(self.generated_image.shape[1] * self.generated_image.shape[2] * self.generated_image.shape[3])
+        return K.mean(K.square(S - O)) / (2. * (size ** 2))
 
     def _total_variation_loss(self):
-        a = K.square(self.output_image[:, :-1, :-1, :] - self.output_image[:, 1:, :-1, :])
-        b = K.square(self.output_image[:, :-1, :-1, :] - self.output_image[:, :-1, 1:, :])
-        return K.sum(K.pow(a + b, 1.25))
+        a = K.square(self.generated_image[:, :-1, :-1, :] - self.generated_image[:, 1:, :-1, :])
+        b = K.square(self.generated_image[:, :-1, :-1, :] - self.generated_image[:, :-1, 1:, :])
+        return K.sum(a + b)

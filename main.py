@@ -22,10 +22,12 @@ if args.cpu_cores > 0:
     session = tf.Session(config=config)
     K.set_session(session)
 
-content_image = load_image(args.content_image, target_size=(400, 714))
+content_image = load_image(args.content_image, target_size=(224, 400))
 style_image = load_image(args.style_image, target_size=content_image.shape)
 
 style_net = StyleNet(input_shape=content_image.shape)
 styled_image = style_net.apply_style(content_image, style_image, display=True)
 display_image(styled_image)
+
+pylab.ioff()
 pylab.show()
