@@ -58,8 +58,8 @@ class StyleNet():
         K.set_value(self.generated_image, np.expand_dims(content_image, axis=0))
 
         optimizer = keras.optimizers.adam(lr=10.)
-        c_loss, t_loss, s_loss = self._neural_style_loss(content_image, return_pieces=True, **kwargs)
-        loss = c_loss + t_loss + s_loss
+        c_loss, t_loss, s_loss = self._neural_style_loss(return_pieces=True, **kwargs)
+        loss = s_loss # c_loss + t_loss + s_loss
 
         updates = optimizer.get_updates(params=self.model.trainable_weights, loss=loss)
         f = K.function(self.model.inputs, [c_loss, t_loss, s_loss], updates=updates)
@@ -86,7 +86,7 @@ class StyleNet():
 
     # todo: precompute gram matrix for style_image for all layers since that never changes
 
-    def _neural_style_loss(self, content_image, content_weight=1e-4, tv_weight=1e-6, style_weight=1., return_pieces=False):
+    def _neural_style_loss(self, content_weight=1., tv_weight=1e-4, style_weight=1e-4, return_pieces=False):
         output = self.model.get_layer(self.content_layer).output
         content_features = output[0]
         output_features = output[2]
@@ -100,7 +100,6 @@ class StyleNet():
             style_features = output[1]
             output_features = output[2]
             style_loss = style_loss + self._style_loss(style_features, output_features)
-        style_loss = style_loss / float(len(conv_outputs))
 
         if return_pieces:
             return content_weight*content_loss, tv_weight*tv_loss, style_weight*style_loss
@@ -110,7 +109,7 @@ class StyleNet():
     def _gram_matrix(self, x):
         features = K.batch_flatten(K.permute_dimensions(x, (2, 0, 1)))
         shape = K.shape(x)
-        return K.dot(features, K.transpose(features)) / K.cast(shape[1] * shape[2], x.dtype)
+        return K.dot(features, K.transpose(features)) / K.cast(shape[0] * shape[1], x.dtype)
 
     def _style_loss(self, style_features, output_features):
         S = self._gram_matrix(style_features)
@@ -118,6 +117,6 @@ class StyleNet():
         return K.mean(K.square(S - O))
 
     def _total_variation_loss(self):
-        a = K.sum(K.square(self.generated_image[:, :-1, :, :] - self.generated_image[:, :1, :, :]))
-        b = K.sum(K.square(self.generated_image[:, :, :-1, :] - self.generated_image[:, :, :1, :]))
+        a = K.sum(K.square(self.generated_image[:, :-1, :, :] - self.generated_image[:, 1:, :, :]))
+        b = K.sum(K.square(self.generated_image[:, :, :-1, :] - self.generated_image[:, :, 1:, :]))
         return a + b
