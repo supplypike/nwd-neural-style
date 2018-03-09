@@ -28,6 +28,7 @@ def postprocess_image(array):
     y = array.copy()
     y = y + AVG_PIXEL
     y = y[...,::-1]
+    y = np.clip(x, 0, 255).astype('uint8')
     return y
 
 pylab.ion()
