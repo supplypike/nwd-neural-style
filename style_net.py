@@ -12,7 +12,7 @@ import sys
 class StyleNet():
     def __init__(self,
                  input_shape=(224, 224, 3),
-                 content_layer='block5_conv2',
+                 content_layer='block4_conv2',
                  style_layers=['block1_conv1', 'block2_conv1', 'block3_conv1', 'block4_conv1', 'block5_conv1']):
         self.content_layer = content_layer
         self.style_layers = style_layers
@@ -57,7 +57,7 @@ class StyleNet():
     def apply_style(self, content_image, style_image, display=False, **kwargs):
         K.set_value(self.generated_image, np.expand_dims(content_image, axis=0))
 
-        optimizer = keras.optimizers.adam(lr=5.)
+        optimizer = keras.optimizers.adam(lr=10.)
         c_loss, t_loss, s_loss = self._neural_style_loss(content_image, return_pieces=True, **kwargs)
         loss = c_loss + t_loss + s_loss
 
@@ -109,15 +109,15 @@ class StyleNet():
 
     def _gram_matrix(self, x):
         features = K.batch_flatten(K.permute_dimensions(x, (2, 0, 1)))
-        return K.dot(features - 1, K.transpose(features - 1))
+        shape = K.shape(x)
+        return K.dot(features, K.transpose(features)) / K.cast(shape[1] * shape[2], x.dtype)
 
     def _style_loss(self, style_features, output_features):
         S = self._gram_matrix(style_features)
         O = self._gram_matrix(output_features)
-        size = int(self.generated_image.shape[1] * self.generated_image.shape[2] * self.generated_image.shape[3])
-        return K.mean(K.square(S - O)) / (2. * (size ** 2))
+        return K.mean(K.square(S - O))
 
     def _total_variation_loss(self):
-        a = K.square(self.generated_image[:, :-1, :-1, :] - self.generated_image[:, 1:, :-1, :])
-        b = K.square(self.generated_image[:, :-1, :-1, :] - self.generated_image[:, :-1, 1:, :])
-        return K.sum(a + b)
+        a = K.sum(K.square(self.generated_image[:, :-1, :, :] - self.generated_image[:, :1, :, :]))
+        b = K.sum(K.square(self.generated_image[:, :, :-1, :] - self.generated_image[:, :, :1, :]))
+        return a + b
