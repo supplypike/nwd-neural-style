@@ -5,13 +5,13 @@ from keras.utils.data_utils import get_file
 WEIGHTS_PATH = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 WEIGHTS_PATH_NO_TOP = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
-def create_vgg16_topology(input_shape=(224, 224, 3), include_top=True):
+def create_vgg16_topology(input_shape=(224, 224, 3), include_top=True, input_tensor=None):
     if include_top:
         if input_shape != (224, 224, 3):
             print('WARNING: Expected 224x224x3 input when using trained classifier!')
         input_shape = (224, 224, 3)
 
-    x = Input(shape=input_shape)
+    x = Input(shape=input_shape, tensor=input_tensor)
     y = x
 
     y = Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1')(y)
@@ -54,7 +54,7 @@ def load_vgg16_weights(model, include_top=True, by_name=False):
         weights = get_file('vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5', WEIGHTS_PATH_NO_TOP)
     model.load_weights(weights, by_name=by_name)
 
-def load_vgg16(input_shape=(224, 224, 3), include_top=True, by_name=False):
-    model = create_vgg16_topology(input_shape, include_top)
-    load_vgg16_weights(model, include_top, by_name)
+def load_vgg16(input_shape=(224, 224, 3), include_top=True, input_tensor=None):
+    model = create_vgg16_topology(input_shape, include_top, input_tensor=input_tensor)
+    load_vgg16_weights(model, include_top)
     return model
