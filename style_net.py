@@ -53,7 +53,7 @@ class StyleNet():
             sys.stdout.flush()
         print()
 
-        return K.get_value(generated_image)
+        return K.get_value(generated_image)[0]
 
     def _content_loss(self, content_features, generated_features):
         return K.mean(K.square(content_features[0] - generated_features[0]))
