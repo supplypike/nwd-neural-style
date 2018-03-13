@@ -25,14 +25,14 @@ class StyleNet():
         style_outputs = [x.output for x in self.model.layers if x.name in self.style_layers]
         style_func = K.function(self.model.inputs, style_outputs)
         style_features = style_func([np.expand_dims(style_image, axis=0)])
-        style_features = [self._gram_matrix(x[0]) for x in style_features]
+        style_grams = [self._gram_matrix(x[0]) for x in style_features]
 
         generated_image = K.variable(np.expand_dims(content_image, axis=0))
         generated_content_features = Model(inputs=self.model.input, outputs=content_outputs)(generated_image)
         generated_style_features = Model(inputs=self.model.input, outputs=style_outputs)(generated_image)
 
         content_loss = content_weight * self._content_loss(content_features, generated_content_features)
-        style_loss = style_weight * self._style_loss(style_features, generated_style_features)
+        style_loss = style_weight * self._style_loss(style_grams, generated_style_features)
         variation_loss = variation_weight * self._variation_loss(generated_image)
         total_loss = content_loss + style_loss + variation_loss
 
@@ -58,10 +58,10 @@ class StyleNet():
     def _content_loss(self, content_features, generated_features):
         return K.mean(K.square(content_features[0] - generated_features[0]))
 
-    def _style_loss(self, style_features, generated_features):
+    def _style_loss(self, style_grams, generated_features):
         loss = 0.
-        for style_feat, gen_feat in zip(style_features, generated_features):
-            loss = loss + K.mean(K.square(style_feat - self._gram_matrix(gen_feat[0])))
+        for style_gram, gen_feat in zip(style_grams, generated_features):
+            loss = loss + K.mean(K.square(style_gram - self._gram_matrix(gen_feat[0])))
         return loss
 
     def _variation_loss(self, generated_image):
