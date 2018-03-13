@@ -1,8 +1,6 @@
 from __future__ import print_function
 from image import display_image
-from latent_value import LatentValue
 from keras import backend as K
-from keras.layers import Concatenate, Conv2D, GlobalMaxPooling2D,  Input, MaxPooling2D
 from keras.models import Model
 from vgg16 import load_vgg16
 import keras
