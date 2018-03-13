@@ -30,6 +30,9 @@ if args.cpu_cores > 0:
 if args.display:
     pylab.ion()
 
+if args.output_image:
+    print('The final result will be saved as {}'.format(args.output_image))
+
 if not args.display and not args.output_image:
     print('WARNING: You have not turned on display or provided an output image path, so you will NOT see the styled results.')
 
