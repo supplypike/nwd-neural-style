@@ -34,6 +34,21 @@ To do that, run the following code:
 
 The output is a list of the top 5 classes that the network guesses the image belongs to.
 
+### Installing
+If you wish to install the dependencies you can follow the following instructions.
+
+**CPU Only**
+
+For CPU use only, it is quite easy to install. You will need `python 2.7.13` (there is a way to get it working with Python 3, but we won't detail that here) as well as `pip`. The only command you should need to run is:
+
+`pip install -r cpu_requirements.txt`
+
+Then you can follow the above instructions to run the neural styling tool.
+
+**GPU Support**
+
+For use with a GPU this can be more complex. You'll need a few extra libraries including CUDA, CUDADNN, and some others. We recommend following the instructions at tensorflow.org, or picking up a pre-installed GPU instance from a cloud provider such as Paperspace, AWS, Google Cloud, etc. 
+
 ## The Code
 - main.py: Contains the argument parser and the main entry point for the program. Look here for adding new arguments.
 - image.py: This file contains helper methods for manipulating files, such as the load_image, and display_image methods.
