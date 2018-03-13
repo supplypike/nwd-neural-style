@@ -25,11 +25,9 @@ if args.cpu_cores > 0:
 content_image = load_image(args.content_image, max_size=args.size)
 style_image = load_image(args.style_image, target_size=content_image.shape[:-1])
 
-display_image(content_image)
-
 style_net = StyleNet(input_shape=content_image.shape)
-#styled_image = style_net.apply_style(content_image, style_image, display=args.display)
-#display_image(styled_image)
+styled_image = style_net.apply_style(content_image, style_image, display=args.display)
+display_image(styled_image)
 
 pylab.ioff()
 pylab.show()

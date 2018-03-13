@@ -57,9 +57,9 @@ class StyleNet():
     def apply_style(self, content_image, style_image, display=False, **kwargs):
         K.set_value(self.generated_image, np.expand_dims(content_image, axis=0))
 
-        optimizer = keras.optimizers.adam(lr=10.)
+        optimizer = keras.optimizers.adam(lr=1.)
         c_loss, t_loss, s_loss = self._neural_style_loss(return_pieces=True, **kwargs)
-        loss = s_loss # c_loss + t_loss + s_loss
+        loss = c_loss + t_loss + s_loss
 
         updates = optimizer.get_updates(params=self.model.trainable_weights, loss=loss)
         f = K.function(self.model.inputs, [c_loss, t_loss, s_loss], updates=updates)
@@ -86,7 +86,7 @@ class StyleNet():
 
     # todo: precompute gram matrix for style_image for all layers since that never changes
 
-    def _neural_style_loss(self, content_weight=1., tv_weight=1e-4, style_weight=1e-4, return_pieces=False):
+    def _neural_style_loss(self, content_weight=5., tv_weight=1e2, style_weight=5e2, return_pieces=False):
         output = self.model.get_layer(self.content_layer).output
         content_features = output[0]
         output_features = output[2]
