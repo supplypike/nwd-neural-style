@@ -10,10 +10,15 @@ def display_image(img):
     pylab.imshow(image.array_to_img(img))
     pylab.pause(0.01)
 
-def load_image(path, target_size=None):
+def load_image(path, max_size=None, target_size=None):
+    assert not max_size or not target_size, 'Cannot set both max size and target size!'
     img = image.load_img(path)
+    if max_size:
+        if img.size[0] > img.size[1]:
+            target_size = (img.size[1] * max_size / img.size[0], max_size)
+        else:
+            target_size = (max_size, img.size[0] * max_size / img.size[1])
     if target_size:
-        # change target size from row-major to column-major
         img = img.resize(target_size[::-1], resample=Image.BILINEAR)
     img = image.img_to_array(img)
     img = img[...,::-1]
