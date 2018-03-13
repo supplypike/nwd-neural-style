@@ -36,5 +36,3 @@ def postprocess_image(array):
     y = y[...,::-1]
     y = np.clip(y, 0, 255).astype('uint8')
     return y
-
-pylab.ion()
