@@ -13,10 +13,8 @@ def display_image(img):
 def load_image(path, target_size=None):
     img = image.load_img(path)
     if target_size:
-        # Handle matlab's column order:
-        width = target_size[0]
-        height = target_size[1]
-        img = img.resize((height, width), resample=Image.BILINEAR)
+        # change target size from row-major to column-major
+        img = img.resize(target_size[::-1], resample=Image.BILINEAR)
     img = image.img_to_array(img)
     img = img[...,::-1]
     img = img - AVG_PIXEL
