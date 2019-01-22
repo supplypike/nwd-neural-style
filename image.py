@@ -15,9 +15,9 @@ def load_image(path, max_size=None, target_size=None):
     img = image.load_img(path)
     if max_size:
         if img.size[0] > img.size[1]:
-            target_size = (img.size[1] * max_size / img.size[0], max_size)
+            target_size = (int(img.size[1] * max_size / img.size[0]), max_size)
         else:
-            target_size = (max_size, img.size[0] * max_size / img.size[1])
+            target_size = (max_size, int(img.size[0] * max_size / img.size[1]))
     if target_size:
         img = img.resize(target_size[::-1], resample=Image.BILINEAR)
     img = image.img_to_array(img)
